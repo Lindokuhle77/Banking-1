@@ -4,9 +4,10 @@ A concept mobile banking app built for my portfolio with **React Native, Expo an
 
 > **Concept project.** Fictional bank, mocked data. No real banking, money or credentials, and not affiliated with any bank.
 
-**Live demo:** `https://Lindokuhle77.github.io/khaya-bank/` &nbsp;|&nbsp; Demo login: `demo` / `Khaya@2026`
+- **Live demo:** `https://Lindokuhle77.github.io/khaya-bank/` &nbsp;|&nbsp; Demo login: `demo` / `Khaya@2026`
 
 ![CI](https://github.com/Lindokuhle77/khaya-bank/actions/workflows/ci.yml/badge.svg)
+
 
 ## Screenshots
 
