@@ -4,10 +4,9 @@ A concept mobile banking app built for my portfolio with **React Native, Expo an
 
 > **Concept project.** Fictional bank, mocked data. No real banking, money or credentials, and not affiliated with any bank.
 
-- **Live demo:** `https://Lindokuhle77.github.io/khaya-bank/` &nbsp;|&nbsp; Demo login: `demo` / `Khaya@2026`
+**Live demo:** `https://lindokuhle77.github.io/Banking-1/` &nbsp;|&nbsp; Demo login: `demo` / `Khaya@2026`
 
-![CI](https://github.com/Lindokuhle77/khaya-bank/actions/workflows/ci.yml/badge.svg)
-
+![CI](https://github.com/Lindokuhle77/Banking-1/actions/workflows/ci.yml/badge.svg)
 
 ## Screenshots
 
@@ -24,13 +23,14 @@ A concept mobile banking app built for my portfolio with **React Native, Expo an
 - **Secure sign-in:** login, 4-digit PIN, Face ID or fingerprint, three-strikes sign-out, auto-lock after 2 minutes idle or 30 seconds in the background
 - **Accounts:** cheque, savings and credit card with balances, searchable and filterable transaction history grouped by day, transaction details
 - **Payments:** add and pay beneficiaries, transfer between own accounts, one-time PIN confirmation, per-payment limit, live balance updates and receipts
+- **Multi-bank view:** link other (mock) banks through an open-banking style consent flow, then see combined balances, transactions and spending insights. Runs on a built-in demo provider or a local mock API server; linked accounts are view-only
 - **Cards:** freeze and unfreeze, online and international switches
 - **Money tools:** monthly statements (shareable), spending insights by category, in-app notifications
 - **Polish:** light and dark mode, screen-reader labels and alerts, large touch targets, automated tests and CI
 
 ## Tech
 
-React Native, Expo, Expo Router (file-based navigation), TypeScript, React Context for state, Expo SecureStore and Local Authentication, Jest and Testing Library, GitHub Actions (CI and GitHub Pages deploy).
+React Native, Expo, Expo Router (file-based navigation), TypeScript, React Context for state, Expo SecureStore and Local Authentication, Jest and Testing Library, an optional Express mock API (token sign-in, rate limiting, saved connections), GitHub Actions (CI and GitHub Pages deploy).
 
 ## How it is built
 

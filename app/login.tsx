@@ -18,7 +18,10 @@ export default function Login() {
 
   const submit = async () => {
     setError('');
-    if (!(await login(u, p))) setError('Username or password is incorrect. Check them and try again.');
+    const r = await login(u, p);
+    if (r === 'invalid') setError('Username or password is incorrect. Check them and try again.');
+    else if (r === 'limited') setError('Too many attempts. Wait a minute and try again.');
+    else if (r === 'unavailable') setError('Could not reach the sign-in server. Check that it is running, or remove EXPO_PUBLIC_API_URL to use the built-in demo.');
   };
 
   return (

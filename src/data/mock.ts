@@ -1,5 +1,8 @@
 export type Category = 'groceries' | 'fuel' | 'transport' | 'entertainment' | 'utilities' | 'income' | 'shopping' | 'transfer' | 'airtime' | 'dining';
-export type Account = { id: string; name: string; type: 'cheque' | 'savings' | 'credit'; number: string; balance: number };
+export type Account = {
+  id: string; name: string; type: 'cheque' | 'savings' | 'credit'; number: string; balance: number;
+  institutionId?: string; institutionName?: string; connectionId?: string; // set for accounts linked from other banks
+};
 export type Transaction = { id: string; accountId: string; date: string; description: string; category: Category; amount: number };
 
 export const accounts: Account[] = [

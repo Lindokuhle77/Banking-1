@@ -16,13 +16,13 @@ export default function Transfer() {
   useTheme();
   const router = useRouter();
   const { accounts, setPending } = useBank();
-  const sources = accounts.filter(a => a.type !== 'credit');
+  const sources = accounts.filter(a => a.type !== 'credit' && !a.institutionId);
   const [fromId, setFromId] = useState(sources[0].id);
   const [toPick, setToPick] = useState(sources[1].id);
   const [amountText, setAmountText] = useState('');
   const [error, setError] = useState('');
 
-  const targets = accounts.filter(a => a.id !== fromId);
+  const targets = accounts.filter(a => a.id !== fromId && !a.institutionId);
   const toId = targets.some(a => a.id === toPick) ? toPick : targets[0].id;
 
   const next = () => {

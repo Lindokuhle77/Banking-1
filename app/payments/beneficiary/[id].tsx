@@ -18,7 +18,7 @@ export default function PayBeneficiary() {
   const router = useRouter();
   const { accounts, beneficiaries, setPending } = useBank();
   const ben = beneficiaries.find(b => b.id === id);
-  const payFrom = accounts.filter(a => a.type !== 'credit');
+  const payFrom = accounts.filter(a => a.type !== 'credit' && !a.institutionId);
   const [fromId, setFromId] = useState(payFrom[0].id);
   const [amountText, setAmountText] = useState('');
   const [reference, setReference] = useState('');

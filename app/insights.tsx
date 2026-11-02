@@ -12,12 +12,19 @@ import { useBank } from '../src/bank/BankContext';
 
 export default function Insights() {
   useTheme();
-  const { transactions } = useBank();
+  const { transactions, accounts, connections } = useBank();
+  const [bankPick, setBankPick] = useState('all');
+  const bankOptions = [
+    { key: 'all', label: 'All banks' }, { key: 'khaya', label: 'Khaya Bank' },
+    ...connections.map(c => ({ key: c.institutionId, label: c.institutionName })),
+  ];
+  const bank = bankOptions.some(o => o.key === bankPick) ? bankPick : 'all';
   const months = useMemo(() => Array.from(new Set(transactions.map(t => monthKey(t.date)))).sort().reverse(), [transactions]);
   const [month, setMonth] = useState(months[0]);
 
   const { rows, spent, income } = useMemo(() => {
-    const inMonth = transactions.filter(t => monthKey(t.date) === month);
+    const bankOf = (id: string) => accounts.find(a => a.id === id)?.institutionId ?? 'khaya';
+    const inMonth = transactions.filter(t => monthKey(t.date) === month && (bank === 'all' || bankOf(t.accountId) === bank));
     const totals: Record<string, number> = {};
     for (const t of inMonth) if (t.amount < 0 && t.category !== 'transfer') totals[t.category] = (totals[t.category] ?? 0) + -t.amount;
     const rows = Object.entries(totals).sort((a, b) => b[1] - a[1]);
@@ -26,12 +33,13 @@ export default function Insights() {
       spent: rows.reduce((s, [, v]) => s + v, 0),
       income: inMonth.filter(t => t.amount > 0 && t.category === 'income').reduce((s, t) => s + t.amount, 0),
     };
-  }, [transactions, month]);
+  }, [transactions, month, bank, accounts]);
 
   return (
     <Screen>
       <BackLink label="More" />
       <AppText variant="title">Spending insights</AppText>
+      {connections.length > 0 && <ChipGroup label="Bank" options={bankOptions} value={bank} onChange={setBankPick} />}
       <ChipGroup label="Month" options={months.map(m => ({ key: m, label: monthLabel(m) }))} value={month} onChange={setMonth} />
       <Card style={{ gap: spacing.xs }}>
         <AppText variant="label" color={colors.muted}>Spent this month</AppText>

@@ -11,11 +11,14 @@ import { TransactionRow } from '../../src/components/TransactionRow';
 import { colors, spacing } from '../../src/theme/tokens';
 import { formatZAR } from '../../src/lib/format';
 import { useBank } from '../../src/bank/BankContext';
+import { BankBreakdown } from '../../src/components/BankBreakdown';
 
 export default function Home() {
   useTheme();
   const router = useRouter();
   const { accounts, transactions, unreadCount } = useBank();
+  const own = accounts.filter(a => !a.institutionId);
+  const linked = accounts.filter(a => !!a.institutionId);
   const net = accounts.reduce((sum, a) => sum + a.balance, 0);
   const recent = transactions.slice(0, 5);
 
@@ -43,7 +46,12 @@ export default function Home() {
       </View>
 
       <AppText variant="title">Accounts</AppText>
-      {accounts.map(a => <AccountCard key={a.id} account={a} onPress={() => router.push(`/account/${a.id}`)} />)}
+      {own.map(a => <AccountCard key={a.id} account={a} onPress={() => router.push(`/account/${a.id}`)} />)}
+      {linked.length > 0 && <AppText variant="title">Linked banks</AppText>}
+      {linked.map(a => <AccountCard key={a.id} account={a} onPress={() => router.push(`/account/${a.id}`)} />)}
+      <Button label={linked.length ? 'Manage linked banks' : 'Link another bank'} variant="secondary" onPress={() => router.push('/linked')} />
+
+      {linked.length > 0 && <BankBreakdown accounts={accounts} />}
 
       <AppText variant="title">Recent activity</AppText>
       <Card style={{ paddingVertical: spacing.xs }}>

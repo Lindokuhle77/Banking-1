@@ -21,8 +21,8 @@ export default function Statements() {
   const months = useMemo(() => Array.from(new Set(transactions.map(t => monthKey(t.date)))).sort().reverse(), [transactions]);
   const [month, setMonth] = useState(months[0]);
 
-  const account = accounts.find(a => a.id === accountId)!;
-  const list = transactions.filter(t => t.accountId === accountId && monthKey(t.date) === month);
+  const account = accounts.find(a => a.id === accountId) ?? accounts[0];
+  const list = transactions.filter(t => t.accountId === account.id && monthKey(t.date) === month);
   const moneyIn = list.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
   const moneyOut = list.filter(t => t.amount < 0).reduce((s, t) => s + -t.amount, 0);
 
@@ -36,7 +36,7 @@ export default function Statements() {
     <Screen>
       <BackLink label="More" />
       <AppText variant="title">Statements</AppText>
-      <ChipGroup label="Account" options={accounts.map(a => ({ key: a.id, label: a.name }))} value={accountId} onChange={setAccountId} />
+      <ChipGroup label="Account" options={accounts.map(a => ({ key: a.id, label: a.institutionName ? `${a.name} (${a.institutionName})` : a.name }))} value={account.id} onChange={setAccountId} />
       <ChipGroup label="Month" options={months.map(m => ({ key: m, label: monthLabel(m) }))} value={month} onChange={setMonth} />
       <Card style={{ gap: spacing.xs }}>
         <AppText variant="label" color={colors.muted}>{account.name} {account.number}</AppText>

@@ -1,10 +1,15 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   accounts as seedAccounts, transactions as seedTx, beneficiaries as seedBen,
   cards as seedCards, notifications as seedNotes,
   Account, Beneficiary, Transaction, BankCard, AppNotification,
 } from '../data/mock';
 import { formatZAR } from '../lib/format';
+import { aggregator } from '../aggregator/client';
+import type { Connection, ConnectionData } from '../aggregator/client';
+import { useAuth } from '../auth/AuthContext';
+
+const sortDesc = (list: Transaction[]) => [...list].sort((a, b) => b.date.localeCompare(a.date));
 
 export const PAYMENT_LIMIT = 10000;
 
@@ -35,6 +40,10 @@ type Ctx = {
   cards: BankCard[]; notifications: AppNotification[]; unreadCount: number;
   toggleCard: (id: string, key: 'frozen' | 'online' | 'international') => void;
   markAllRead: () => void;
+  connections: Connection[];
+  addConnection: (c: Connection, data: ConnectionData) => void;
+  replaceConnectionData: (connectionId: string, data: ConnectionData) => void;
+  removeConnection: (connectionId: string) => void;
   setPending: (p: Pending | null) => void;
   addBeneficiary: (name: string, bank: string, accountNumber: string) => string;
   execute: () => { ok: boolean; error?: string };
@@ -50,10 +59,54 @@ export function BankProvider({ children }: { children: React.ReactNode }) {
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [cards, setCards] = useState(seedCards);
   const [notifications, setNotifications] = useState(seedNotes);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const { status } = useAuth();
+  const restored = useRef(false);
+
+  useEffect(() => {
+    if (status === 'signedOut') {
+      restored.current = false;
+      setAccounts(seedAccounts); setTransactions(seedTx); setBeneficiaries(seedBen); setCards(seedCards);
+      setNotifications(seedNotes); setConnections([]); setPending(null); setReceipt(null);
+      return;
+    }
+    if (status !== 'unlocked' || restored.current) return;
+    restored.current = true;
+    (async () => {
+      try {
+        const list = await aggregator.listConnections();
+        const loaded = await Promise.all(list.map(async c => ({ c, data: await aggregator.fetchData(c) })));
+        if (loaded.length === 0) return;
+        setConnections(loaded.map(x => x.c));
+        setAccounts(a => [...a.filter(x => !x.connectionId), ...loaded.flatMap(x => x.data.accounts)]);
+        setTransactions(t => sortDesc([...loaded.flatMap(x => x.data.transactions), ...t.filter(x => !loaded.some(l => l.data.accounts.some(a => a.id === x.accountId)))]));
+      } catch { /* the app stays usable without linked banks */ }
+    })();
+  }, [status]);
 
   const value = useMemo<Ctx>(() => ({
     accounts, transactions, beneficiaries, pending, receipt, setPending, cards, notifications,
     unreadCount: notifications.filter(n => !n.read).length,
+    connections,
+    addConnection(c, data) {
+      setConnections(list => [...list.filter(x => x.id !== c.id), c]);
+      setAccounts(list => [...list.filter(a => a.connectionId !== c.id), ...data.accounts]);
+      setTransactions(list => sortDesc([...data.transactions, ...list]));
+      setNotifications(n => [{ id: 'n' + Date.now(), title: `${c.institutionName} linked`, body: `${data.accounts.length} accounts added`, date: new Date().toISOString(), read: false }, ...n]);
+    },
+    replaceConnectionData(connectionId, data) {
+      const old = new Set(accounts.filter(a => a.connectionId === connectionId).map(a => a.id));
+      setAccounts(list => [...list.filter(a => a.connectionId !== connectionId), ...data.accounts]);
+      setTransactions(list => sortDesc([...data.transactions, ...list.filter(t => !old.has(t.accountId))]));
+    },
+    removeConnection(connectionId) {
+      const c = connections.find(x => x.id === connectionId);
+      const old = new Set(accounts.filter(a => a.connectionId === connectionId).map(a => a.id));
+      setConnections(list => list.filter(x => x.id !== connectionId));
+      setAccounts(list => list.filter(a => a.connectionId !== connectionId));
+      setTransactions(list => list.filter(t => !old.has(t.accountId)));
+      if (c) setNotifications(n => [{ id: 'n' + Date.now(), title: `${c.institutionName} disconnected`, body: 'Its accounts and transactions were removed from this app.', date: new Date().toISOString(), read: false }, ...n]);
+    },
     markAllRead() { setNotifications(list => (list.some(n => !n.read) ? list.map(n => ({ ...n, read: true })) : list)); },
     toggleCard(id, key) {
       const card = cards.find(c => c.id === id);
@@ -103,7 +156,7 @@ export function BankProvider({ children }: { children: React.ReactNode }) {
       setPending(null);
       return { ok: true };
     },
-  }), [accounts, transactions, beneficiaries, pending, receipt, cards, notifications]);
+  }), [accounts, transactions, beneficiaries, pending, receipt, cards, notifications, connections]);
 
   return <BankCtx.Provider value={value}>{children}</BankCtx.Provider>;
 }

@@ -45,7 +45,7 @@ export default function AccountDetail() {
       <BackLink label="Accounts" />
       <View>
         <AppText variant="title">{account.name}</AppText>
-        <AppText color={colors.muted}>{account.number}</AppText>
+        <AppText color={colors.muted}>{account.institutionName ? `${account.institutionName} ${account.number}` : account.number}</AppText>
       </View>
       <Card style={{ backgroundColor: colors.ink, borderColor: colors.ink, gap: spacing.xs }}>
         <AppText variant="label" color="#C9CCE8">{account.type === 'credit' ? 'Amount owed' : 'Available balance'}</AppText>

@@ -21,6 +21,7 @@ export default function More() {
   const { unreadCount } = useBank();
   const { pref, setPref } = useTheme();
   const items = [
+    { label: 'Linked banks', icon: 'link-outline', to: '/linked' },
     { label: 'Statements', icon: 'document-text-outline', to: '/statements' },
     { label: 'Spending insights', icon: 'pie-chart-outline', to: '/insights' },
     { label: unreadCount ? `Notifications (${unreadCount} new)` : 'Notifications', icon: 'notifications-outline', to: '/notifications' },

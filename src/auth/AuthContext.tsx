@@ -2,16 +2,18 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { AppState, Platform } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { storage } from '../lib/storage';
+import { demoUser } from '../../shared/mockData';
+import { signIn, signOutSession, SignInResult } from '../aggregator/client';
 
 export type Status = 'loading' | 'signedOut' | 'needsPin' | 'locked' | 'unlocked';
-export const DEMO = { username: 'demo', password: 'Khaya@2026' }; // mock credentials
+export const DEMO = demoUser; // mock credentials
 const IDLE_MS = 2 * 60 * 1000;     // lock after 2 minutes without touch
 const BACKGROUND_MS = 30 * 1000;   // lock if app was backgrounded for 30 seconds
 const MAX_TRIES = 3;
 
 type Ctx = {
   status: Status;
-  login: (u: string, p: string) => Promise<boolean>;
+  login: (u: string, p: string) => Promise<SignInResult>;
   setPin: (pin: string) => Promise<void>;
   unlockWithPin: (pin: string) => Promise<'ok' | 'wrong' | 'locked_out'>;
   unlockWithBiometrics: () => Promise<boolean>;
@@ -19,7 +21,7 @@ type Ctx = {
   logout: () => Promise<void>;
   touch: () => void;
 };
-const AuthCtx = createContext<Ctx>(null as unknown as Ctx);
+const AuthCtx = createContext<Ctx>({ status: 'loading' } as unknown as Ctx);
 export const useAuth = () => useContext(AuthCtx);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -59,11 +61,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Ctx>(() => ({
     status,
     async login(u, p) {
-      if (u.trim().toLowerCase() !== DEMO.username || p !== DEMO.password) return false;
+      const result = await signIn(u.trim().toLowerCase(), p);
+      if (result !== 'ok') return result;
       await storage.set('khaya.user', DEMO.username);
       tries.current = 0;
       setStatus((await storage.get('khaya.pin')) ? 'unlocked' : 'needsPin');
-      return true;
+      return 'ok';
     },
     async setPin(pin) {
       await storage.set('khaya.pin', pin);
@@ -73,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (pin === (await storage.get('khaya.pin'))) { tries.current = 0; setStatus('unlocked'); return 'ok'; }
       tries.current += 1;
       if (tries.current >= MAX_TRIES) {
-        await storage.remove('khaya.user'); await storage.remove('khaya.pin');
+        await storage.remove('khaya.user'); await storage.remove('khaya.pin'); await signOutSession();
         tries.current = 0; setStatus('signedOut');
         return 'locked_out';
       }
@@ -89,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     lock,
     async logout() {
-      await storage.remove('khaya.user'); await storage.remove('khaya.pin');
+      await storage.remove('khaya.user'); await storage.remove('khaya.pin'); await signOutSession();
       setStatus('signedOut');
     },
     touch,

@@ -12,7 +12,7 @@ export function AccountCard({ account, onPress }: { account: Account; onPress: (
       <Card style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <View style={{ gap: spacing.xs }}>
           <AppText variant="label">{account.name}</AppText>
-          <AppText variant="small" color={colors.muted}>{account.number}</AppText>
+          <AppText variant="small" color={colors.muted}>{account.institutionName ? `${account.institutionName} ${account.number}` : account.number}</AppText>
         </View>
         <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
           <AppText variant="title">{formatZAR(Math.abs(account.balance))}</AppText>
